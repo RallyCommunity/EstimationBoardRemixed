@@ -17,4 +17,6 @@ Features include:
 <td><div style="text-align:center;width: 100%"><b>Fixed Scroll Header</b></div></td>
 </tr>
 
+## Installation Notes
 
+Simply add the contents of deploy/<a href="https://raw.github.com/RallyCommunity/EstimationBoardRemixed/master/deploy/EstimationBoardRemixed.html">EstimationBoardRemixed.html</a> to a Custom HTML panel in a Rally Page.
