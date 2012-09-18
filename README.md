@@ -1,6 +1,6 @@
 # Estimation Board Remixed
 
-This remixed version of the classic Estimation Board provides enhanced filtering capabilities and improved support for large story datasets.
+This remixed version of the classic Estimation Board provides enhanced filtering capabilities and improved usability support for large collections of stories.
 
 Features include:
 
