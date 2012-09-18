@@ -16,6 +16,7 @@ Features include:
 <td><div style="text-align:center;width: 100%"><b>Iteration filters</b></div></td>
 <td><div style="text-align:center;width: 100%"><b>Fixed Scroll Header</b></div></td>
 </tr>
+</table>
 
 ## Installation Notes
 
