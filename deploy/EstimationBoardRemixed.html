@@ -14,6 +14,7 @@
             var cardboard;
             var that = this;
             var checkBoxes = [];
+            var iterationDropdown;
         
             this._createLayout = function(element) {
         
@@ -26,6 +27,12 @@
                 var controlDiv = document.createElement("div");
                 dojo.addClass(controlDiv, "controlContainer");
                 headerDiv.appendChild(controlDiv);
+                
+                var iterationsDiv = document.createElement("div");
+                var iterationDiv = document.createElement("div");
+                iterationDiv.id = "iteration";
+                iterationsDiv.appendChild(iterationDiv);
+                headerDiv.appendChild(iterationsDiv);
         
                 var checkBoxContainerDiv = document.createElement("div");
                 dojo.addClass(checkBoxContainerDiv, "typeFilterContainer");
@@ -125,12 +132,26 @@
         
                 //Build types based on checkbox selections
                 var queries = [];
+                
+                // Barry - add query for iteration drop down.
+                console.log(iterationDropdown.getSelectedItem());
+                var selItem = iterationDropdown.getSelectedItem();
+                
+                var query = new rally.sdk.util.Query("ScheduleState < Accepted");
+                
+                if (selItem!=null && selItem.DisplayName != "All") {
+                	query = query.and("Iteration.Name = \"" + selItem.Name + "\"");
+                }
+                
+                console.log(""+query);
+                
                 dojo.forEach(checkBoxes, function(checkBox) {
                     if (checkBox.getChecked()) {
                         queries.push({key:checkBox.getValue(),
                             type: checkBox.getValue(),
                             fetch: "Name,FormattedID,Owner,ObjectID,Rank,PlanEstimate,Children,Ready,Blocked",
-                            query: '(ScheduleState < Accepted)',
+                            //query: '(ScheduleState < Accepted)',
+                            query: query,
                             order: "Rank"
                         });
                     }
@@ -224,7 +245,18 @@
                 this._createLayout(element);
         
                 //Refresh board
-                this._refreshBoard();
+                // --- Barry --- this._refreshBoard();
+                
+                iterationDropdown = new rally.sdk.ui.IterationDropdown({}, rallyDataSource);
+                iterationDropdown.addEventListener("onDataRetrieved",   function(a,eventArgs) {
+					   var all = {};
+					   all[eventArgs.displayValueProperty] = "All";
+					   all[eventArgs.valueProperty] = "All";
+					   eventArgs.items.unshift(all);        
+                });
+          		iterationDropdown.display("iteration", this._refreshBoard);
+
+                
             };
         }
     /**
