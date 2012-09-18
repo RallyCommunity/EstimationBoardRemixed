@@ -594,7 +594,7 @@
         .board {
             clear: both;
         }
-        
+
         /*settings dialog styles */
         a img {
             border: 0;
@@ -716,8 +716,39 @@
         rally.addOnLoad(onLoad);
 
     </script>
+    <script type="text/javascript">
+        // Adjust column header labels for estimates to be fixed when scrolling downward.
+        // FIXME: tried swapping css on scroll but position and top were not reflecting; consider trying again and replacing all hardcoded css below
+        //        e.g. header.className += ' scrollHeader' and header.className.replace(/ scrollHeader/,g)
+        // FIXME: left and right borders of first/last column need to be tweaked/removed.
+        function fixedEstLabelHeaderOnScroll() {
+          body = document.getElementsByTagName("body")[0];
+          // all headers in kanban board
+          headers = document.getElementsByClassName("columnHeader");
+
+          // adjust settings based on scroll amount
+          rally.forEach(headers, function(header) {
+            header.style.backgroundColor = '#fff';
+            header.style.width = '158px';
+            if (body.scrollTop > 69) {  // 69 is height from top of app to bottom of labels
+              header.style.top = 0;
+              header.style.position = 'fixed';
+              header.style.borderLeft = '1px dotted #C6C6C6';
+              header.style.borderRight = '1px dotted #C6C6C6';
+              header.style.borderBottom = '1px dotted #C6C6C6';
+            } else {
+              header.style.top = 69;
+              header.style.position = 'relative';
+              header.style.borderLeft = '1px dotted #C6C6C6';
+              header.style.borderRight = '1px dotted #C6C6C6';
+              header.style.borderBottom = '0px';
+            }
+          });
+        };
+
+    </script>
 </head>
-<body>
+<body onscroll="fixedEstLabelHeaderOnScroll()">
 <div style="display:none">
     <div id="settingsDialogDiv">
         <div id="validationErrors" class="appMessage error"></div>
