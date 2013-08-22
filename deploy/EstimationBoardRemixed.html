@@ -7,14 +7,49 @@
     <meta name="Name" content="App: Estimation Board Remixed"/>
     <meta name="Version" content="2012.09.18"/>
     <meta name="Vendor" content="Rally - David Thomas / Barry Mullan"/>
-    <script type="text/javascript" src="/apps/1.31/sdk.js"></script>
+    <script type="text/javascript" src="https://rally1.rallydev.com/apps/1.31/sdk.js"></script>
 
     <script type="text/javascript">
+    
+    
+    
     function EstimationBoard(rallyDataSource, settingsShow, sizes) {
             var cardboard;
             var that = this;
             var checkBoxes = [];
             var iterationDropdown;
+            
+            this._cardRenderer = function(column, item, options) {
+               //This will allow you to inherit functionality from the BasicCardRenderer
+                rally.sdk.ui.cardboard.BasicCardRenderer.call(this, column, item, options);
+                var that = this;
+                
+                this.getCardBody = function() {
+
+                    var contentDiv = document.createElement("div");
+                    contentDiv.innerHTML = item.Name;
+                    
+                    //console.log(item);
+                    
+                    if(item.ScheduleState == "Accepted") {
+                        var aDiv = document.createElement("div");
+                        
+                        var plabel = document.createTextNode("Points:"+ (item.PlanEstimate != null ? item.PlanEstimate : 0));
+                        aDiv.appendChild(plabel);
+                        
+                        aDiv.appendChild(document.createElement("br"));
+
+                        var alabel = document.createTextNode("Accepted");
+                        aDiv.appendChild(alabel);
+                        
+                        aDiv.style.background = "LightGreen";
+                        aDiv.style.textAlign = "center";
+                        
+                        contentDiv.appendChild(aDiv);
+                    }
+                    return contentDiv;   
+                }
+            };
         
             this._createLayout = function(element) {
         
@@ -68,7 +103,7 @@
                 });
                 checkBoxes.push(defectsCheckBox);
                 defectsCheckBox.display(defectsSpan);
-        
+                
                 var defectSuitesSpan = document.createElement("span");
                 defectSuitesSpan.id = "defectSuites";
                 checkBoxContainerDiv.appendChild(defectSuitesSpan);
@@ -81,7 +116,23 @@
                 });
                 checkBoxes.push(defectSuitesCheckBox);
                 defectSuitesCheckBox.display(defectSuitesSpan);
-        
+
+                var acceptedSpan = document.createElement("span");
+                acceptedSpan.id = "accepted";
+                checkBoxContainerDiv.appendChild(acceptedSpan);
+                
+                var acceptedStoriesCheckBox = new rally.sdk.ui.basic.Checkbox({
+                    showLabel: true,
+                    label: "Show Accepted",
+                    labelPosition: "after",
+                    value: "Accepted",
+                    checked: false
+                });
+                
+                checkBoxes.push(acceptedStoriesCheckBox);
+                acceptedStoriesCheckBox.display(acceptedSpan);
+
+
                 var clearDiv = document.createElement("div");
                 dojo.addClass(clearDiv, "clearFloats");
                 headerDiv.appendChild(clearDiv);
@@ -139,6 +190,13 @@
                 
                 var query = new rally.sdk.util.Query("ScheduleState < Accepted");
                 
+                var showAccepted = checkBoxes[checkBoxes.length-1].getChecked();
+                
+                // if the accepted 
+                console.log("showAccepted:",showAccepted);
+                if (showAccepted)
+                    query = query.or("ScheduleState = Accepted");
+                
                 if (selItem!=null && selItem.DisplayName != "All") {
                 	query = query.and("Iteration.Name = \"" + selItem.Name + "\"");
                 }
@@ -147,17 +205,20 @@
                 
                 dojo.forEach(checkBoxes, function(checkBox) {
                     if (checkBox.getChecked()) {
-                        queries.push({key:checkBox.getValue(),
-                            type: checkBox.getValue(),
-                            fetch: "Name,FormattedID,Owner,ObjectID,Rank,PlanEstimate,Children,Ready,Blocked",
-                            //query: '(ScheduleState < Accepted)',
-                            query: query,
-                            order: "Rank"
-                        });
+                        if (checkBox.getValue()!="Accepted") {
+                            queries.push({key:checkBox.getValue(),
+                                type: checkBox.getValue(),
+                                fetch: "Name,FormattedID,Owner,ObjectID,Rank,PlanEstimate,Children,Ready,Blocked,ScheduleState",
+                                //query: '(ScheduleState < Accepted)',
+                                query: query,
+                                order: "Rank"
+                            });
+                        }
                     }
                 });
         
                 function bucketItems(results) {
+                    console.log("results",results);
                     var items = [];
                     rally.forEach(queries, function(query) {
                         if (results[query.key]) {
@@ -211,7 +272,8 @@
                     items: that._getItems,
                     sortAscending: true,
                     order: "Rank",
-                    enableRanking: false
+                    enableRanking: false,
+                    cardRenderer: that._cardRenderer
                 };
         
                 //Build types based on checkbox selections
@@ -228,10 +290,20 @@
                     }
                     cardboard = new rally.sdk.ui.CardBoard(cardboardConfig, rallyDataSource);
                     cardboard.addEventListener("preUpdate", function(c, args) {
+                        console.log("preUpdate",args);
+                        // don't update accepted items.
+                        if (args.originalItem.ScheduleState=="Accepted")
+                            delete args.fieldsToUpdate["PlanEstimate"];
                         if (parseInt(args.fieldsToUpdate.PlanEstimate, 10) === 0) {
                             args.fieldsToUpdate.PlanEstimate = null;
                         }
                     });
+                    cardboard.addEventListener("onCardPickup", function(c, args) {
+                        console.log("pickup",args);
+//                        if (args.item.ScheduleState == "Accepted")
+//                            dojo.dnd.manager().stopDrag();
+                    });
+
                     cardboard.display("cardBoard");
                 } else {
                     cardboard.refresh(cardboardConfig);
@@ -692,9 +764,9 @@
     <script type="text/javascript">
 
         var projectOid = '__PROJECT_OID__';
-        projectOid = projectOid.indexOf("__") !== -1 ? "723030" : projectOid;
+        projectOid = projectOid.indexOf("__") !== -1 ? "5970178727" : projectOid;
         var workspaceOid = '__WORKSPACE_OID__';
-        workspaceOid = workspaceOid.indexOf("__") !== -1 ? "722746" : workspaceOid;
+        workspaceOid = workspaceOid.indexOf("__") !== -1 ? "140738208" : workspaceOid;
 
         function onLoad() {
             var rallyDataSource = new rally.sdk.data.RallyDataSource(
